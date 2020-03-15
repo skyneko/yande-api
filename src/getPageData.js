@@ -74,6 +74,7 @@ async function getPostData (tags = [], limit = 100,filter = {}, callback) { // d
             if (++count < limit) 
                 callback(post)
         })
+        
         if (count < limit)
             get(page+1, newCookie)
 
