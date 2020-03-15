@@ -1,38 +1,63 @@
 "use strict"
 const request = require("request-promise")
-const cheeio = require("cheerio")
-const fs = require("fs")
+const utils = require("./utils")
+
+const baseURL = "https://yande.re/post?"
 
 /**
  * @param {Int} page
  * @return {Array}  
+ * @callback err
  */
-function getPostByPageID(page) {
-    return new Promise((resolve,reject) => {
+async function getPostByPageNum(baseURL, page, err = () => {}) {
 
-        const URL = "https://yande.re/post"
+    page = (page > 0) ? page : 1
 
-        request(URL)
-            .then(html => {
-                let result = []
-                /**
-                 * Tách các row trong html thành một String Array.
-                 * lọc các đoạn "Post.register" và xử lý để chuyển về dạng JsonObject.  
-                 */
-                html.split("\n")
-                    .forEach(row => {
-                        if (row.indexOf("Post.register(") > -1) {
-                            let post = JSON.parse(
-                                    row.trim().slice("Post.register(".length, row.trim().length-1)
-                                )
-                            result.push(post)
-                        }
-                    })
+    const URL = baseURL + "&page=" + page
 
-                resolve(result)  
+    console.log(URL)
+
+    try {
+        const html = await request(URL)
+    
+        let result = []
+    
+        /**
+         * Tách các row trong html thành một String Array.
+         * lọc các đoạn "Post.register" và xử lý để chuyển về dạng JsonObject.  
+         */
+        html.split("\n")
+            .forEach(row => {
+                if (row.indexOf("Post.register(") > -1) {
+                    let post = JSON.parse(
+                            row.trim().slice("Post.register(".length, row.trim().length-1)
+                        )
+                    result.push(post)
+                }
             })
-            .catch(reject)
-    })
+            
+        return result    
+
+    } catch (e) {
+        return err(e)
+    }
+
 }
 
-module.exports = getPostByPageID
+/**
+ * @param {StringArray} tags 
+ * @param {StringArray} filter 
+ * @param {Int} limit 
+ */
+async function getPostData (tags = [], filter = {}, limit = 100) { // default value
+
+    /* thêm tag vào url */
+    const URL = baseURL + "&tags=" + tags.join("+")
+
+    let data = await getPostByPageNum(URL, 5, console.log)
+
+    return utils.filterPost(data, filter)
+
+}
+
+module.exports = getPostData
