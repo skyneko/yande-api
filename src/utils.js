@@ -1,6 +1,23 @@
 "use strict"
 
 module.exports = {
+
+    /**
+     * @param {String} cookie
+     * @param {Int} page
+     */
+    createHeaders: function(cookie, page) {
+        return {
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Referer': 'https://yande.re/post?page='+(page-1),
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cookie': (cookie) ? cookie : ""
+        }
+    },
+
     /**
      * Filter cho post Object
      * @param {Object} filter
@@ -50,7 +67,7 @@ module.exports = {
 
         /* loại bỏ các phần tử undefined */
         result = result.filter((el) => el != null);
-        //console.log(result)
+        
         return result
     },
 

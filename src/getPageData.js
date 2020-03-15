@@ -1,5 +1,5 @@
 "use strict"
-const request = require("request-promise")
+const request = require("request")
 const utils = require("./utils")
 
 const baseURL = "https://yande.re/post?"
@@ -9,54 +9,76 @@ const baseURL = "https://yande.re/post?"
  * @return {Array}  
  * @callback err
  */
-async function getPostByPageNum(baseURL, page, err = () => {}) {
+function getPostByPageNum(baseURL, page, setCookie) {
+    return new Promise ((resolve) => {
 
-    page = (page > 0) ? page : 1
+        page = (page > 0) ? page : 1
 
-    const URL = baseURL + "&page=" + page
-
-    console.log(URL)
-
-    try {
-        const html = await request(URL)
+        const URL = baseURL + "&page=" + page
+        const headers = utils.createHeaders(setCookie,page);
     
-        let result = []
+        request({
+            method:"GET",
+            headers: headers,
+            uri: URL
+        }, (err, response, html) => {
+            if (err) return console.log(err)
+
+            let result = []
     
-        /**
-         * Tách các row trong html thành một String Array.
-         * lọc các đoạn "Post.register" và xử lý để chuyển về dạng JsonObject.  
-         */
-        html.split("\n")
-            .forEach(row => {
-                if (row.indexOf("Post.register(") > -1) {
-                    let post = JSON.parse(
-                            row.trim().slice("Post.register(".length, row.trim().length-1)
-                        )
-                    result.push(post)
-                }
-            })
-            
-        return result    
+            /**
+             * Tách các row trong html thành một String Array.
+             * lọc các đoạn "Post.register" và xử lý để chuyển về dạng JsonObject.  
+             */
+            html.split("\n")
+                .forEach(row => {
+                    if (row.indexOf("Post.register(") > -1) {
+                        let post = JSON.parse(
+                                row.trim().slice("Post.register(".length, row.trim().length-1)
+                            )
+                        result.push(post)
+                    }
+                })
 
-    } catch (e) {
-        return err(e)
-    }
+            resolve({setCookie: response.headers["set-cookie"], result})    
+        })
 
+    })   
 }
 
 /**
  * @param {StringArray} tags 
  * @param {StringArray} filter 
- * @param {Int} limit 
+ * @param {Int} limit
+ * @callback {Object} post
  */
-async function getPostData (tags = [], filter = {}, limit = 100) { // default value
+async function getPostData (tags = [], limit = 100,filter = {}, callback) { // default value
 
     /* thêm tag vào url */
     const URL = baseURL + "&tags=" + tags.join("+")
 
-    let data = await getPostByPageNum(URL, 5, console.log)
+    let count = 0
+    let startPage = 1
+    let setCookie = ""
+    let result = [];
 
-    return utils.filterPost(data, filter)
+    (async function get(page, setCookie) {
+
+        let data = await getPostByPageNum(URL, page, setCookie)
+
+        let newCookie = "vote=1; " + data.setCookie.map(el => el.split("; ")[0]).join("; ")
+
+        data= utils.filterPost(data.result, filter) 
+        
+        data.forEach((post) => {
+            if (++count < limit) 
+                callback(post)
+        })
+        
+        if (count < limit)
+            get(page+1, newCookie)
+
+    })(startPage, setCookie)
 
 }
 
