@@ -1,18 +1,20 @@
-const utils = require("./src/utils")
-const getPost = require("./src/getPageData");
 
-(async () => {
-    
-    let filter = {
-        tags: [],
-        score: 0,
-        //fileSize: 0,
-        //width: 0,
-        //height: 0,
-        hasChildren: true,
-        //rating: "q"
-    }
-    let data = await getPost(["pantsu", "shirt_lift"], filter)
+const yande = require("./index")
 
-    console.log(data.map(el => ("https://yande.re/post/show/" + el.id)))
-})()
+const limit = 10000
+
+const tags = []
+
+let filter = {
+    tags: [],
+    score: 100,
+    //fileSize: 0,
+    //width: 0,
+    //height: 0,
+    //hasChildren: true,
+    //rating: "q"
+}
+
+yande.getPost(tags, limit, filter, (post) => {
+    console.log("https://yande.re/post/show/"+post.id)
+})
