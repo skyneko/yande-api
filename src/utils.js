@@ -23,7 +23,7 @@ module.exports = {
      * @param {Object} filter
      * + {Array} filter.tags : loại bỏ các post không có tag này
      * + {Int} filter.score : lọc post có score nhỏ hơn
-     * + {Int} filter.fileSize : lọc filesize lớn hơn 
+     * + {Int} filter.fileSize : lọc filesize bé hơn 
      * + {Int} filter.width: lọc width bé hơn
      * + {Int} filter.height: lọc height bé hơn  
      * + {Boolean} filter.has_children
@@ -48,7 +48,7 @@ module.exports = {
             if (filter.score !== undefined && filter.score > post.score) return;
 
             /* filter by filesize */
-            if (filter.fileSize !== undefined && filter.fileSize < post.file_size) return;
+            if (filter.fileSize !== undefined && filter.fileSize > post.file_size) return;
 
             /* filter by width */
             if (filter.width !== undefined && filter.width > post.width) return;
