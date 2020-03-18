@@ -60,23 +60,32 @@ async function getPostData (tags = [], limit = 100,filter = {}, callback) { // d
     let count = 0
     let startPage = 1
     let setCookie = ""
+    let thread = 20
     let result = [];
 
     (async function get(page, setCookie) {
+        let arrayPromise = []
+        for (let i = page + 0; i < page + thread; ++i) {
+            
+            arrayPromise.push(getPostByPageNum(URL, i, setCookie))
+        }
 
-        let data = await getPostByPageNum(URL, page, setCookie)
-
-        let newCookie = "vote=1; " + data.setCookie.map(el => el.split("; ")[0]).join("; ")
-
-        data= utils.filterPost(data.result, filter) 
+        let res = await Promise.all(arrayPromise);
         
-        data.forEach((post) => {
-            if (++count < limit) 
-                callback(post)
+        let newCookie = "vote=1; " + res[res.length-1].setCookie.map(el => el.split("; ")[0]).join("; ")
+
+        res.forEach(data => {
+        
+            data= utils.filterPost(data.result, filter) 
+            
+            data.forEach((post) => {
+                if (++count < limit) 
+                    callback(post)
+            })
         })
         
         if (count < limit)
-            get(page+1, newCookie)
+            get(page+thread, newCookie)
 
     })(startPage, setCookie)
 
