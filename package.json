@@ -2,7 +2,7 @@
   "name": "yande.re",
   "version": "1.0.0",
   "description": "",
-  "main": "script.js",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
